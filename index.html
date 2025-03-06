@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PSI Readings Dashboard</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <style>
+      body {
+        background-color: #f8f9fa;
+      }
+      .container {
+        margin-top: 20px;
+      }
+      table {
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="text-center">Singapore PSI Readings</h1>
+      <p class="text-center">
+        Last Updated: <span id="timestamp">Fetching...</span>
+      </p>
+
+      <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+          <thead class="table-dark">
+            <tr>
+              <th>Metric</th>
+              <th>West</th>
+              <th>East</th>
+              <th>Central</th>
+              <th>South</th>
+              <th>North</th>
+            </tr>
+          </thead>
+          <tbody id="psi-table">
+            <tr>
+              <td colspan="7" class="text-center">Loading data...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      async function fetchPSI() {
+        const url = 'https://api.data.gov.sg/v1/environment/psi'
+        try {
+          const response = await fetch(url)
+          const data = await response.json()
+          console.log(data)
+
+          const readings = data.items[0].readings
+          const timestamp = new Date(
+            data.items[0].update_timestamp
+          ).toLocaleString()
+
+          document.getElementById('timestamp').innerText = timestamp
+          const tableBody = document.getElementById('psi-table')
+          tableBody.innerHTML = ''
+
+          Object.keys(readings).forEach((key) => {
+            const row = document.createElement('tr')
+            row.innerHTML = `
+                    <td>${key}</td>
+                    <td>${readings[key].west}</td>
+                    <td>${readings[key].east}</td>
+                    <td>${readings[key].central}</td>
+                    <td>${readings[key].south}</td>
+                    <td>${readings[key].north}</td>
+                `
+            tableBody.appendChild(row)
+          })
+        } catch (error) {
+          console.error('Error fetching data:', error)
+          document.getElementById(
+            'psi-table'
+          ).innerHTML = `<tr><td colspan="7" class="text-center text-danger">Error loading data</td></tr>`
+        }
+      }
+
+      fetchPSI()
+      setInterval(fetchPSI, 3600000)
+    </script>
+  </body>
+</html>
